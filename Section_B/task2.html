@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+        .card{
+            width:320px;
+            height: 400px;
+            overflow: hidden;
+        }
+        img{
+            max-height: 300px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container d-flex flex-wrap justify-content-center" id="productContainer">
+        <!-- The fetched product items will be inserted here -->
+    </div>
+    
+    <script>
+        let currentPage = 1;
+        let loading = false;
+
+        // Function to fetch the next set of items
+        const fetchNextItems = () => {
+            if (!loading) {
+                loading = true;
+                fetch(`https://dummyjson.com/products?limit=5&page=${currentPage}`)
+                .then(res => res.json())
+                .then(data => {
+                    let productsArray;
+                    if (Array.isArray(data)) {
+                        productsArray = data;
+                    } else if (Array.isArray(data.products)) {
+                        productsArray = data.products;
+                    } else {
+                        console.error('Data is not an array:', data);
+                        loading = false;
+                        return;
+                    }
+
+                    const productContainer = document.getElementById('productContainer');
+                    productsArray.forEach(product => {
+                        console.log(product);
+                        const productElement = document.createElement('div');
+                        productElement.classList.add('card');
+                        productElement.innerHTML = `
+                            <div class="card-body">
+                                <img src="${product.images[0]}" alt="img"/>
+                                <h5 class="card-title">${product.title}</h5>
+                                <p class="card-text">${product.description}</p>
+                            </div>
+                        `;
+                        productContainer.appendChild(productElement);
+                    });
+                    currentPage++;
+                    loading = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    loading = false;
+                });
+            }
+        };
+
+        // Function to check if the user has reached the end of the container
+        const handleScroll = () => {
+            const container = document.getElementById('productContainer');
+            const containerHeight = container.offsetHeight;
+            const scrollHeight = window.scrollY + window.innerHeight;
+            if (scrollHeight >= containerHeight) {
+                fetchNextItems();
+            }
+        };
+
+        // Attach the scroll event listener
+        window.addEventListener('scroll', handleScroll);
+
+        // Fetch initial items
+        fetchNextItems();
+    </script>
+</body>
+</html>
